@@ -1,9 +1,12 @@
 import httplib, urllib, base64, json
+import configparser
+config = configparser.ConfigParser()
+config.read('cfg.ini')
 
 headers = {
     # Request headers
     'Content-Type': 'application/json',
-    'Ocp-Apim-Subscription-Key': 'c9dae5eec5e044cc8cdbe028f4a4d87d',
+    'Ocp-Apim-Subscription-Key': config['MSFACE']['api_key'],
 }
 
 personGroupId = 'students'
@@ -88,7 +91,10 @@ def create_person(pname,udata):
         data = response.read()
         data = json.loads(data)
         conn.close()
-        return data['personId']
+        if not data['personId']:
+            return ''
+        else:    
+            return data['personId']
     except Exception as e:
         print("Error: %s" % e.message)        
 

@@ -28,7 +28,7 @@ import MSFaceAPI as msface
 LOCALE_LOCK = threading.Lock()
 
 window_width = 700
-window_height = 450
+window_height = 460
 window_x = 400
 window_y = 150
 ip = '<IP>'
@@ -44,6 +44,7 @@ dataset_path = os.path.join(base_path,'dataset')
 tmp_path = os.path.join(base_path,'tmp')
 cloudinary_dataset = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/dataset'
 cloudinary_tmp = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/tmp'
+
 
 camera_port = 1
 user={
@@ -66,6 +67,8 @@ def query(comm,params):
     conn.commit()
     return cursor    
 
+new_user_added = False
+
 
 class SignUpForm(QFrame):
     def __init__(self, parent, *args, **kwargs):
@@ -79,10 +82,9 @@ class SignUpForm(QFrame):
         self.top = QFrame()
         self.bottom = QFrame()
         #self.top.setFrameShape(QFrame.StyledPanel)
-        self.top.setObjectName("frame")
-        self.bottom.setObjectName("frame")
+        self.top.setObjectName("gframe")
+        self.bottom.setObjectName("gframe")
         #self.bottom.setFrameShape(QFrame.StyledPanel)
-        self.setStyleSheet("#frame {border-radius:5px;border:1px solid #a5a5a5}")
         self.vbox = QVBoxLayout()
         self.uname = ''
         self.unameLbl = QLabel('User Name')
@@ -100,7 +102,7 @@ class SignUpForm(QFrame):
         self.dobEdt.setDisplayFormat('dd/MM/yyyy')
         self.emailEdt = QLineEdit()
         self.dobEdt.setCalendarPopup(True)
-        self.genderEdt.addItems(["Male and Female", "Female","Other"])
+        self.genderEdt.addItems(["Male", "Female","Other"])
         self.unameEdt.textChanged.connect(self.__handleTextChanged)
         self.fnameEdt.textChanged.connect(self.__handleTextChanged)
         self.lnameEdt.textChanged.connect(self.__handleTextChanged)
@@ -118,35 +120,60 @@ class SignUpForm(QFrame):
         self.fbox.addRow(self.emailLbl,self.emailEdt)
         self.fbox.addRow(self.genderLbl,self.genderEdt)
         
-        self.vbox1 = QVBoxLayout()
-        self.hbox1 = QHBoxLayout() 
-        self.hbox = QHBoxLayout()
+        font1 = QFont('Helvetica', small_text_size)
+        self.messageLbl = QLabel('')
+        self.messageLbl.setFont(font1)
         self.verifyButton = QPushButton('Verify Data', self)
         self.verifyButton.clicked.connect(self.verifyData)
         self.createButton = QPushButton('Create User', self)
         self.createButton.clicked.connect(self.createUser)
-        self.nextButton = QPushButton('Next', self)
-        self.nextButton.clicked.connect(self.nextTab)
+        
+        self.vbox1 = QVBoxLayout()
+        self.hbox1 = QHBoxLayout() 
+        self.hbox = QHBoxLayout()
+        
+        self.hbox.setAlignment(Qt.AlignCenter)
+        self.hbox1.setAlignment(Qt.AlignCenter)
+        self.vbox1.setAlignment(Qt.AlignCenter)
+        
+        
+        self.hbox.addWidget(self.messageLbl)
+        self.hbox1.addStretch(2)
         self.hbox1.addWidget(self.verifyButton)
+        self.hbox1.addStretch(1)
         self.hbox1.addWidget(self.createButton)
-        self.hbox1.addWidget(self.nextButton)
+        self.hbox1.addStretch(2)
+        #self.hbox1.addWidget(self.nextButton)
         self.vbox1.addLayout(self.hbox)
         self.vbox1.addLayout(self.hbox1)
-        self.hbox1.setSpacing(20)
+        self.hbox1.setSpacing(10)
         #self.vbox1.setContentsMargins(250, 10, 250, 20)
 
-        self.top.setLayout(self.fbox)
+        self.topvBox = QVBoxLayout()
+        self.topvBox.setAlignment(Qt.AlignCenter)
+        self.topvBox.addLayout(self.fbox)
+        self.top.setLayout(self.topvBox)
         self.bottom.setLayout(self.vbox1)
-        self.vbox.addWidget(self.top)
-        self.vbox.addWidget(self.bottom)
+        
+        self.splitter1 = QSplitter(Qt.Vertical)
+        self.splitter1.addWidget(self.top)
+        self.splitter1.addWidget(self.bottom)
+        self.splitter1.setSizes([550,150])
+
+        self.vbox.addWidget(self.splitter1)
         self.setLayout(self.vbox)
+
+
 
     def __handleTextChanged(self, text):
         self.verified = False
 
     def verifyData(self):
         self.verified=False
+        global new_user_added
+        new_user_added = False
         if (not self.unameEdt.text()) or (not self.fnameEdt.text()) or (not self.lnameEdt.text()) or (not self.emailEdt.text()) :
+            self.messageLbl.setText('Error: One or more required fields empty! verification failed')
             print 'One or more required fields empty ! fill them all'
             print 'Verification failed'
             return
@@ -154,6 +181,7 @@ class SignUpForm(QFrame):
         user['fname']=str(self.fnameEdt.text())
         user['lname']=str(self.lnameEdt.text())
         user['email']=str(self.emailEdt.text())
+        print user['email']
         user['dob']=str(self.dobEdt.date().toString('dd-MM-yyyy'))
         user['gender']=str(self.genderEdt.currentText())
         
@@ -161,30 +189,41 @@ class SignUpForm(QFrame):
         cursor.execute(sql_command,(user['uname'],))
         
         if cursor.fetchone():
+            self.messageLbl.setText('Error: Username already exist! try something new')
             print 'Username already exist'
             print 'Verification failed'
         else:
+            self.messageLbl.setText('Success: Verification Successful!')
             print 'verification successful'
             self.verified = True
 
 
     def createUser(self):
         if self.verified == True:
-            user['personid'] = msface.create_person(user['uname'],user['fname']+' '+user['lname'])
+            user['personid'] = msface.create_person(user['uname'],user['fname']+' '+ user['lname'])
             
+            if not user['personid']:
+                self.messageLbl.setText('Error: Error while creating person! try again')
+                return
+
+            self.messageLbl.setText('Success: User created: %s!' % user['uname'])    
             print "User created ... " + user['uname']
             print "PersonID = " + user['personid']
-            format_str = """INSERT INTO students (id,uname,fname,lname,dob,gender,personid) 
-                     VALUES (NULL,?,?,?,?,?,?);"""
-            params = (user['uname'], user['fname'], user['lname'],user['dob'],user['gender'],user['personid'])         
+            
+            format_str = """INSERT INTO students (id,uname,fname,lname,dob,email,gender,personid) 
+                     VALUES (NULL,?,?,?,?,?,?,?);"""
+            params = (user['uname'], user['fname'], user['lname'],user['dob'],user['email'],user['gender'],user['personid'])         
             conn.execute(format_str,params)
+            self.messageLbl.setText('Success: User added to database sucessfully! Generate Face Dataset now')
+            
             print "User added to database sucessfully!"
             conn.commit()
+            global new_user_added
+            new_user_added = True
+            
         else:
+            self.messageLbl.setText('Warning: Verification not done! first verify')
             print "Verification not done! first verify"
-
-    def nextTab(self):
-        a=1
 
 
 class AddDetailsTab(QWidget):
@@ -195,8 +234,6 @@ class AddDetailsTab(QWidget):
     def initUI(self):
         self.hbox = QHBoxLayout()
         self.SignUpFrame = QFrame()
-        self.SignUpFrame.setStyleSheet("background-color: white")
-        self.SignUpFrame.setStyleSheet("color: black")
         self.SignUpForm = SignUpForm(self.SignUpFrame)
         self.hbox.addWidget(self.SignUpForm)
         self.vbox  = QVBoxLayout()
@@ -224,33 +261,29 @@ class GenerateDatasetTab(QWidget):
         self.topleft = QFrame()        
         self.imageLabel=QLabel()
         self.imageLabel.setScaledContents(True)
-        self.imageLabel.setFrameShape(QFrame.StyledPanel)
-        #self.imageLabel.setFixedSize(self.video_size)
-        #self.topleft.setFixedSize(self.video_size)
-        self.topleft.setContentsMargins(0,0,0,0)
+        self.topleft.setObjectName('gframe')
+        self.topleft.setContentsMargins(50,10,50,10)
         self.imageLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.vbox1 = QVBoxLayout()
         self.vbox1.addWidget(self.imageLabel)
         self.topleft.setLayout(self.vbox1)
 
         self.topright = QFrame()
-        self.topright.setFrameShape(QFrame.StyledPanel)
         self.snpGrid = QGridLayout()
-        self.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
+        
         self.snpGrid.setSpacing(2)
         self.snpGrid.setContentsMargins(2,2,2,2)
         
-        #self.grid = QGridLayout()
-        #self.grid.setContentsMargins(5,-50,0,5)
         self.topright.setLayout(self.snpGrid)
-
-
         self.hbox = QHBoxLayout()
         self.startButton = QPushButton('Start')
         self.stopButton = QPushButton('Stop')
         self.takeSnapshotButton = QPushButton('Take Snapshot')
         self.uploadDatasetButton = QPushButton('Upload Dataset')
         self.trainModelButton = QPushButton('Train Model')
+        self.messageLbl = QLabel('')
+        font1 = QFont('Helvetica', small_text_size)
+        self.messageLbl.setFont(font1)
 
         self.startButton.clicked.connect(self.startCapture)
         self.stopButton.clicked.connect(self.stopCapture)
@@ -263,10 +296,19 @@ class GenerateDatasetTab(QWidget):
         self.hbox.addWidget(self.takeSnapshotButton)
         self.hbox.addWidget(self.uploadDatasetButton)
         self.hbox.addWidget(self.trainModelButton)
-        self.bottom = QFrame()
-        self.bottom.setLayout(self.hbox)
+        
+        self.mhbox = QHBoxLayout()
+        self.mhbox.setAlignment(Qt.AlignCenter)
+        self.mhbox.addWidget(self.messageLbl)
 
-        #self.datasetButtons.setFrameShape(QFrame.StyledPanel) 
+        self.bvbox = QVBoxLayout()
+        self.bvbox.addLayout(self.mhbox)
+        self.bvbox.addLayout(self.hbox)
+        self.bvbox.setSpacing(10)
+        
+        self.bottom = QFrame()
+        self.bottom.setLayout(self.bvbox)
+        self.bottom.setObjectName("gframe")
 
         self.splitter1 = QSplitter(Qt.Horizontal)
         self.splitter1.addWidget(self.topleft)
@@ -321,10 +363,6 @@ class GenerateDatasetTab(QWidget):
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
             
-
-        # cv2.imwrite('tmp.jpg',frame)
-        # self.imageLabel.setPixmap(QPixmap(os.getcwd() + "/tmp.jpg"))    
-
         frame = cv2.cvtColor(frame, cv2.cv.CV_BGR2RGB)
         frame = cv2.flip(frame, 1)
         image = QImage(frame, frame.shape[1], frame.shape[0], 
@@ -335,15 +373,21 @@ class GenerateDatasetTab(QWidget):
 
 
     def startCapture(self):
-        self.initDir()
-        self.capturing = True
-        self.capture = cv2.VideoCapture(camera_port)
-        self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.video_size.width())
-        self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.video_size.height())
+        global new_user_added
+        if new_user_added == True:
 
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.display_video_stream)
-        self.timer.start(30)
+            self.initDir()
+            self.capturing = True
+            self.capture = cv2.VideoCapture(camera_port)
+            self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, self.video_size.width())
+            self.capture.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, self.video_size.height())
+
+            self.timer = QtCore.QTimer()
+            self.timer.timeout.connect(self.display_video_stream)
+            self.timer.start(30)
+
+        else:
+            self.messageLbl.setText('Warning: First create new user')
 
     def stopCapture(self):
         #print "pressed End"
@@ -354,6 +398,14 @@ class GenerateDatasetTab(QWidget):
             cv2.destroyAllWindows()
 
     def takeSnapshot(self):
+
+        if self.capturing == False:
+            self.messageLbl.setText('Warning: Start the camera')
+            return
+
+        if self.snapshotCnt == self.maxSnapshotCnt:
+            self.messageLbl.setText('Warning: All snapshots taken, no need to take more now!')
+            return                 
         
         if (self.capturing == True)  and (self.snapshotCnt < self.maxSnapshotCnt):
             try:
@@ -384,38 +436,52 @@ class GenerateDatasetTab(QWidget):
                 
                 image_crop = frame[my:my+mh,mx:mx+mw]
                 self.snapshotCnt=self.snapshotCnt+1
+                self.messageLbl.setText('Process: Total snapshots captured: %d (Remaining: %d)' % (self.snapshotCnt,self.maxSnapshotCnt-self.snapshotCnt))
                 file_name = 'img_%d.jpg'% (self.snapshotCnt)
                 file = os.path.join(self.store_dir,file_name)
                 cv2.imwrite(file, image_crop)
                 self.snpLabels[self.snapshotCnt-1].setPixmap(QPixmap(file))
 
             except Exception as e:
+                self.messageLbl.setText('Error: Snapshot capturing failed')
                 print "Snapshot capturing failed...\n Errors:"
                 print e
 
         if(self.snapshotCnt == self.maxSnapshotCnt):
             self.captureCompleted=True
+            self.stopCapture()
 
 
     def uploadDataset(self):
+        if self.capturing == True:
+            self.stopCapture()
+
+        if self.captureCompleted == False:
+            self.messageLbl.setText('Warning: Take required no of snapshot for uploading dataset!')
+            return
         i=1
         personName = user['uname']
         if not personName:
+            self.messageLbl.setText('Error: Username empty!')
             print 'username empty!'
+            self.messageLbl.setText('Error: Upload dataset failed!')
             print 'upload dataset failed!'
             return
 
         for file in os.listdir(self.store_dir):
             file_path=os.path.join(self.store_dir,file)
             try:
+                self.messageLbl.setText('Process: Uploading image... %d' %i)
                 print 'Uploading... %d' % i
                 imup.upload_person_image(file_path,file,user['uname'])
                 print 'Uploaded... %d' % i
+                self.messageLbl.setText('Success: Uploaded image... %d' %i)
                 i=i+1
             except Exception as e:
                 print("Error: %s" % e.message)
 
         if i==1:
+            self.messageLbl.setText('Error: Some error while uploading to cloudnary, Please try later!')
             print 'Some error while uploading to cloudnary, Please try later!'
             return
 
@@ -423,25 +489,27 @@ class GenerateDatasetTab(QWidget):
             cloudinary_dir= cloudinary_dataset+'/'+personName+'/'
             for i in range(1,self.maxSnapshotCnt+1):
                 image_url=cloudinary_dir+'img_%d.jpg' % i
+                self.messageLbl.setText('Process: Adding face... %d' %i)
                 print 'Adding face... %d'%i
                 msface.add_person_face(user['personid'],image_url)
                 print 'Added face... %d'%i
+                self.messageLbl.setText('Success: Added face... %d' %i)
             
             print "Dataset Uploaded Sucessfuly!"    
+            self.messageLbl.setText('Success: Dataset Uploaded Sucessfuly!')
             self.uploadCompleted = True    
         except Exception as e:
+                self.messageLbl.setText('Error: Unknown Error!')
                 print("Error: \n")
                 print e
 
     def trainModel(self):
+            self.messageLbl.setText('Process: Training Started ')
             print('Training Started...')
             msface.train()
             print('Training Completed...')
+            self.messageLbl.setText('Success: Training Completed Successfully')
 
-
-
-     
-    
 class MainWindow:
 
     def __init__(self): 
@@ -454,12 +522,14 @@ class MainWindow:
     
         self.tab1 = QWidget()
         self.DetailsTab=AddDetailsTab(self.tab1)
-        self.qt.addTab(self.DetailsTab,"Add Details")
+        self.qt.addTab(self.DetailsTab,"Create User")
     
         self.tab2 = QWidget()
         self.DatasetTab=GenerateDatasetTab(self.tab2)
         self.qt.addTab(self.DatasetTab,"Generate Face Dataset"),self.qt.show()
-
+        self.qt.setStyleSheet("#gframe {border-radius:5px;border:1px solid #a5a5a5}")
+        #self.qt.setStyleSheet("#darkframe {border-radius:5px;border:2px solid #a5a5a5}")
+        
 
 
 if __name__ == '__main__':

@@ -54,7 +54,7 @@ faceCascade = cv2.CascadeClassifier(cascPath)
     
 current_user={
     'userid':1,
-    'uname':'',
+    'uname':'aish',
     'fname':'',
     'lname':'',
     'email':'',
@@ -63,7 +63,7 @@ current_user={
     'personid':''
 }
 
-userLoggedIn = False
+login_status = False
 conn = sqlite3.connect('solams.db')
 TABLE_NAME="students"
 cursor = conn.cursor()
@@ -247,6 +247,7 @@ class LectureTab(QWidget):
             v = self.face_verify(personid)
             if  v == True :
                 self.userLoggedIn = True
+                login_status = True
                 print "Login Successful !"
                 print "current user:"+ uname
                 current_user['userid'] = res[0]
@@ -416,12 +417,114 @@ class RecordsTab(QWidget):
         self.initUI()
 
     def initUI(self):
-        a=1
+        self.hbox=QHBoxLayout()
+        self.vbox1= QVBoxLayout()
+        self.vbox2= QVBoxLayout()
+        
+        self.left = QFrame()
+        self.right = QFrame()
+        self.left.setFrameShape(QFrame.StyledPanel)
+        self.right.setFrameShape(QFrame.StyledPanel)
+        self.left.setLayout(self.vbox1)
+        self.right.setLayout(self.vbox2)
+
+        self.splitter1 = QSplitter(Qt.Horizontal)
+        self.splitter1.addWidget(self.left)
+        self.splitter1.addWidget(self.right)
+        self.splitter1.setSizes([650,50])
+        self.vvbox = QVBoxLayout()
+        self.vvbox.addWidget(self.splitter1)
+        self.setLayout(self.vvbox)
+
+        self.courseLbl = QLabel('Select Course')
+        self.courses = select_query("SELECT name FROM courses",())
+        self.courseSelect = QComboBox()
+        
+        for i in self.courses:
+            self.courseSelect.addItem(i)
+
+        self.showRecordsButton = QPushButton('Show Records')
+        self.showRecordsButton.clicked.connect(self.fetch_attendance_records)
+
+        self.recordsTable = QTableWidget()
+
+        #self.recordsTable.setScaledContents(True)
+        #self.recordsTable.resizeColumnsToContents()
+        #self.recordsTable.resizeRowsToContents()
+        
+        self.tableHeaders = ['Lecture No','Title','Duration','Percent Attendance', 'Lecture Status','Lecture date']
+        self.recordsTable.setRowCount(15)
+        self.recordsTable.setColumnCount(len(self.tableHeaders))
+        self.recordsTable.setHorizontalHeaderLabels(self.tableHeaders)
+        self.header = self.recordsTable.horizontalHeader()
+        self.header.setResizeMode(QHeaderView.ResizeToContents)
+        self.header.setStretchLastSection(True)
+
+        #self.recordsTable.horizontalHeader().setStretchLastSection(True)
+        self.recordsTable.setContentsMargins(0,0,0,0)
+        self.vbox1.addWidget(self.recordsTable)
+        self.vbox1.setSpacing(2)
+
+        self.vbox2.addWidget(self.courseLbl)
+        self.vbox2.addWidget(self.courseSelect)
+        self.vbox2.addWidget(self.showRecordsButton)
+        self.vbox2.addStretch(2)
+
+    def fetch_attendance_records(self):
+
+        self.currentCourseNo =  self.courseSelect.currentIndex()+1
+        self.userid = current_user['userid']
+        if self.userid !=0 and self.currentCourseNo!=0 :
+            self.recordsTable.clearContents()
+
+            comm = "SELECT lectureno ,title, duration FROM lectures WHERE courseid = ? ORDER BY lectureno"
+            res = multiple_select_query(comm,(str(self.currentCourseNo)))
+            lecturenos = []
+            titles = []
+            durations = []
+            print res
+            self.recordsTable.setRowCount(len(res))
+            for row in res:
+                lecturenos.append(row[0])
+                titles.append(row[1])
+                durations.append(row[2])
+
+
+            for idx,lectureno in enumerate(lecturenos):
+
+                comm = "SELECT COUNT(*) FROM attendance WHERE userid =? AND courseid = ? AND lectureno = ?"
+                cnt = int_select_query(comm,(self.userid,self.currentCourseNo,lectureno))
+                cnt = cnt[0]
+                print "Lecture No. ",lectureno
+                if cnt==0:
+                    #print "Attendance not found"
+                    row_content = [lectureno, titles[idx],durations[idx],'0.0','Remaning','NULL']
+                    #print row_content
+                    for pos , item in enumerate(row_content):
+                        self.recordsTable.setItem(lectureno-1, pos , QTableWidgetItem(str(item)))
+
+                else:
+                    comm = "SELECT MAX(percent_completed), start_time FROM attendance WHERE userid =? AND courseid = ? AND lectureno = ?"
+                    res = multiple_select_query(comm,(self.userid,self.currentCourseNo,lectureno))[0]
+                    
+                    percent = res[0]
+                    completion_day = res[1]
+                    #print "Attendance found " ,lectureno, res
+                    print completion_day
+                    row_content = [lectureno, titles[idx],durations[idx],percent,'Remaning',completion_day[0:10]]
+                    if percent > 75:
+                        row_content[2] = "Completed"
+
+                    for pos , item in enumerate(row_content):
+                        #print pos,item
+                        self.recordsTable.setItem(lectureno-1, pos , QTableWidgetItem(str(item)))
 
     
 class MainWindow:
     def __init__(self): 
         self.qt = QTabWidget()
+        #geom = QDesktopWidget().availableGeometry()
+        #self.qt.setGeometry(geom)
         self.qt.setGeometry(window_x, window_y, window_width, window_height)
         self.pal=QPalette()
         self.pal.setColor(QPalette.Background,Qt.white)
@@ -434,7 +537,7 @@ class MainWindow:
     
         self.tab2 = QWidget()
         self.RecordsTab=RecordsTab(self.tab2)
-        self.qt.addTab(self.RecordsTab,"Records")
+        self.qt.addTab(self.RecordsTab,"Attendance Records")
         self.qt.show()
 
 

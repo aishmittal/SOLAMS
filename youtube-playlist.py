@@ -3,11 +3,13 @@
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.tools import argparser
+import configparser
+config = configparser.ConfigParser()
+config.read('cfg.ini')
 
-
-DEVELOPER_KEY = "AIzaSyCK8apvAQG7BJVNnF6Cm9xjETCe5etZrKU"
-YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"
+DEVELOPER_KEY = config['YOUTUBE']['DEVELOPER_KEY']
+YOUTUBE_API_SERVICE_NAME = config['YOUTUBE']['YOUTUBE_API_SERVICE_NAME']
+YOUTUBE_API_VERSION = config['YOUTUBE']['YOUTUBE_API_VERSION']
 
 import sqlite3
 
