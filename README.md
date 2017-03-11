@@ -29,7 +29,20 @@ All users can view there attendance records by selecting the cource in records t
  1. Microsoft Cognitive Services Face APIs (for building face identification model)
  2. Cloudinary APIs (for storing dataset)
  3. YouTube APIs (for getting video information of playlists)
- 
+
+## Project Structure
+ ```
+    ├── dataset                               # Local Dataset storage path
+    ├── tmp                                   # Local Path to store temprary files
+    ├── main.py                               # Main app to view lectures and attendance records
+    ├── register.py                           # Register app to register new users
+    ├── MSFaceAPI.py                          # Mudule for interacting with MS FACE APIs
+    ├── imageUpload.py                        # Module for uploading images to cloudinary
+    ├── haarcascade_frontalface_default.xml   # Cascade Classifier for face recognition
+    ├── cnf.ini                               # configuration file to store API keys
+    ├── solams.db                             # Sqlite3 database to store records
+    └── README.md
+```
 ## Database used
  sqlite3
  
