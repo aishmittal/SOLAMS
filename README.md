@@ -32,8 +32,8 @@ All users can view there attendance records by selecting the cource in records t
 
 ## Project Structure
  ```
-    ├── dataset                               # Local Dataset storage path
-    ├── tmp                                   # Local Path to store temprary files
+    ├── dataset/                               # Local Dataset storage path
+    ├── tmp/                                   # Local Path to store temprary files
     ├── main.py                               # Main app to view lectures and attendance records
     ├── register.py                           # Register app to register new users
     ├── MSFaceAPI.py                          # Mudule for interacting with MS FACE APIs
