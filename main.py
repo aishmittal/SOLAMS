@@ -39,8 +39,8 @@ ip = '<IP>'
 ui_locale = '' # e.g. 'fr_FR' fro French, '' as default
 time_format = "hh:mm:ss" # 12 or 24
 date_format = "dd-MM-YYYY" # check python doc for strftime() for options
-large_text_size = 28
-medium_text_size = 18
+large_text_size = 14
+medium_text_size = 12
 small_text_size = 10
 
 base_path = os.path.dirname(os.path.realpath(__file__))
@@ -48,13 +48,13 @@ dataset_path = os.path.join(base_path,'dataset')
 tmp_path = os.path.join(base_path,'tmp')
 cloudinary_dataset = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/dataset'
 cloudinary_tmp = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/tmp'
-camera_port = 1
+camera_port = 0
 cascPath = 'haarcascade_frontalface_default.xml'
 faceCascade = cv2.CascadeClassifier(cascPath) 
     
 current_user={
-    'userid':1,
-    'uname':'aish',
+    'userid':0,
+    'uname':'',
     'fname':'',
     'lname':'',
     'email':'',
@@ -152,6 +152,10 @@ class LectureTab(QWidget):
         self.initUI()
 
     def initUI(self):
+        font1 = QFont('Helvetica', small_text_size)
+        font2 = QFont('Helvetica', medium_text_size)
+        font3 = QFont('Helvetica', large_text_size)
+
         self.hbox=QHBoxLayout()
         self.vbox1= QVBoxLayout()
         self.vbox2= QVBoxLayout()
@@ -166,16 +170,32 @@ class LectureTab(QWidget):
         self.splitter1 = QSplitter(Qt.Horizontal)
         self.splitter1.addWidget(self.left)
         self.splitter1.addWidget(self.right)
-        self.splitter1.setSizes([550,150])
+        self.splitter1.setStretchFactor(20, 1)
+
         self.vvbox = QVBoxLayout()
+        self.vvbox.setAlignment(Qt.AlignCenter)
+        self.vvbox.setContentsMargins(0,0,0,0)
+        self.vvbox.setSpacing(0)
         self.vvbox.addWidget(self.splitter1)
         self.setLayout(self.vvbox)
 
-        self.fbox=QFormLayout()
-        self.fbox.setSpacing(20)
+
+        self.userMessageLbl = QLabel('')
+        self.userMessageLbl.setFont(font3)
+        self.userMessageLbl.setContentsMargins(5,20,5,20)
+        #self.userMessageLbl.setFixedWidth(40)
+
+        self.fbox1=QFormLayout()
+        self.fbox1.setAlignment(Qt.AlignCenter)
+        self.fbox1.setSpacing(20)
         self.unameLbl = QLabel('User Name')
         self.unameEdt = QLineEdit()
+        self.loginMessageLbl = QLabel('')
+        
+        self.loginMessageLbl.setFont(font1)
+        self.loginMessageLbl.setAlignment(Qt.AlignCenter)
         self.loginButton = QPushButton('Login')
+
         self.loginButton.clicked.connect(self.user_login)
         self.courseLbl = QLabel('Select Course')
         self.courses = select_query("SELECT name FROM courses",())
@@ -184,7 +204,8 @@ class LectureTab(QWidget):
         for i in self.courses:
             self.courseSelect.addItem(i)
 
-        
+        self.fbox2=QFormLayout()
+        self.fbox2.setSpacing(20)
         self.lectureLbl = QLabel('Lecture No.')
         self.lectureSelect = QComboBox()
         self.lectures = []
@@ -197,19 +218,58 @@ class LectureTab(QWidget):
 
         self.startButton = QPushButton('Start Lecture')
         self.startButton.clicked.connect(self.start_new_lecture)
+        
 
-        self.fbox.addRow(self.unameLbl)
-        self.fbox.addRow(self.unameEdt)
-        self.fbox.addRow(self.loginButton)
-        self.fbox.addRow(self.courseLbl)
-        self.fbox.addRow(self.courseSelect)
-        self.fbox.addRow(self.lectureLbl)
-        self.fbox.addRow(self.lectureSelect)
-        self.fbox.addRow(self.startButton)
-        self.vbox2.addLayout(self.fbox)
+        self.fbox1.addRow(self.unameLbl)
+        self.fbox1.addRow(self.unameEdt)
+        self.fbox1.addRow(self.loginButton)
+        self.fbox1.addRow(self.loginMessageLbl)
+        self.fbox1.setContentsMargins(60,10,60,10)
+        
+        self.fbox2.addRow(self.userMessageLbl)
+        self.fbox2.addRow(self.courseLbl)
+        self.fbox2.addRow(self.courseSelect)
+        self.fbox2.addRow(self.lectureLbl)
+        self.fbox2.addRow(self.lectureSelect)
+        self.fbox2.addRow(self.startButton)
+        self.fbox2.setContentsMargins(10,10,10,10)
+        
+        self.fbox3 = QFormLayout()
+        self.dcntLbl = QLabel('Current Detection Count: ')
+        self.dcnt = QLabel('') 
+        self.tdcntLbl = QLabel('Total Detections: ')
+        self.tdcnt = QLabel('') 
+        self.lpLbl = QLabel('Percent Attendance: ')
+        self.lp = QLabel('')
+        self.dcntLbl.setFont(font2)
+        self.dcnt.setFont(font2)
+        self.tdcntLbl.setFont(font2)
+        self.tdcnt.setFont(font2)
+        self.lpLbl.setFont(font2)
+        self.lp.setFont(font2)
+        
+
+
+        self.fbox3.addRow(self.dcntLbl,self.dcnt)
+        self.fbox3.addRow(self.tdcntLbl,self.tdcnt)
+        self.fbox3.addRow(self.lpLbl,self.lp)
+        self.fbox3.setContentsMargins(5,40,5,20)
+
+        self.topRight = QFrame()
+        self.topRight.setObjectName("box-border")
+        self.middleRight = QFrame()
+        self.bottomRight = QFrame()
+        self.topRight.setLayout(self.fbox1)
+        self.middleRight.setLayout(self.fbox2)
+        self.bottomRight.setLayout(self.fbox3)
+        
+        
+        self.vbox2.addWidget(self.topRight)
+        self.vbox2.addWidget(self.middleRight)
+        self.vbox2.addWidget(self.bottomRight)
 
         self.video = Browser()
-        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI'
+        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI?autoplay=1'
         self.currentLectureNo = 1
         #self.video = QWebView()
         #self.factory = WebPluginFactory()
@@ -221,7 +281,7 @@ class LectureTab(QWidget):
         #sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         #sizePolicy.setHeightForWidth(True)
         #self.video.setSizePolicy(sizePolicy)
-        self.vbox1.setContentsMargins(5,50,5,50)
+        self.vbox1.setContentsMargins(5,100,5,100)
         self.vbox1.addWidget(self.video,Qt.AlignCenter,Qt.AlignCenter)
 
 
@@ -230,7 +290,10 @@ class LectureTab(QWidget):
 
     def user_login(self):
         #self.userLoggedIn = False
+        global login_status
+        login_status = False
         if not self.unameEdt.text():
+            self.loginMessageLbl.setText('Warning: Enter username!')
             print "Enter username !"
             return
 
@@ -242,12 +305,14 @@ class LectureTab(QWidget):
         res = cursor.fetchone()
         if res:
             #print res
-            personid = res[6]
+            personid = res[7]
             #print personid
             v = self.face_verify(personid)
             if  v == True :
+                
                 self.userLoggedIn = True
                 login_status = True
+                self.loginMessageLbl.setText('Success: Login Successful !')
                 print "Login Successful !"
                 print "current user:"+ uname
                 current_user['userid'] = res[0]
@@ -255,15 +320,19 @@ class LectureTab(QWidget):
                 current_user['fname'] = res[2]
                 current_user['lname'] = res[3]
                 current_user['dob'] = res[4]
-                current_user['gender'] = res[5]
-                current_user['personid'] = res[6]
-                print current_user
+                current_user['email'] = res[5]
+                current_user['gender'] = res[6]
+                current_user['personid'] = res[7]
+                self.userMessageLbl.setText('Welcome %s !' % current_user['fname'])
+                #print current_user
             else:
+                self.loginMessageLbl.setText('Error: Login Failed , try again !')
                 print "Login Failed !"
                 print "Please try again!"                
             
 
         else:
+            self.loginMessageLbl.setText('Error: Username not found !')
             print 'user does not exist, get yourself registered!'
             
 
@@ -281,29 +350,38 @@ class LectureTab(QWidget):
         # if self.userLoggedIn == False:
         #     print "Login first !"
         #     return
+        global login_status
+        if login_status == True:
+            
+            self.currentCourseNo = self.courseSelect.currentIndex()+1
+            self.currentLectureNo = self.lectureSelect.currentIndex()+1
+            
+            comm = """SELECT url,duration FROM lectures WHERE courseid = ? AND lectureno = ?"""
+            res  = multiple_select_query(comm,(self.currentCourseNo,self.currentLectureNo))
+            res = res[0]
+            #print res
+            
+            self.lectureUrl = res[0]
+            self.lectureDuration = res[1]
+            self.maxDetectionCount = (self.lectureDuration * 60000) / self.detectionInterval
+            self.tdcnt.setText(str(self.maxDetectionCount))
+            self.dcnt.setText('0')
+            self.lp.setText('0.00')
+            #print "maxDetectionCount %d " % self.maxDetectionCount
+            
+            self.detectionCount = 0
+            self.video.load(QtCore.QUrl(self.lectureUrl+'&autoplay=1'))
 
-        self.currentCourseNo = self.courseSelect.currentIndex()+1
-        self.currentLectureNo = self.lectureSelect.currentIndex()+1
-        #print self.currentCourseNo , self.currentLectureNo 
-        comm = """SELECT url,duration FROM lectures WHERE courseid = ? AND lectureno = ?"""
-        res  = multiple_select_query(comm,(self.currentCourseNo,self.currentLectureNo))
-        res = res[0]
-        #print res
-        self.lectureUrl = res[0]
-        self.lectureDuration = res[1]
-        self.maxDetectionCount = (self.lectureDuration * 60000) / self.detectionInterval
-        print "maxDetectionCount %d " % self.maxDetectionCount
-        self.detectionCount = 0
-        self.video.load(QtCore.QUrl(self.lectureUrl))
+            comm = "INSERT INTO attendance (userid,courseid,lectureno,percent_completed) VALUES (?,?,?,?)"
+            cur = query(comm,(current_user['userid'],self.currentCourseNo,self.currentLectureNo,0))
+            comm = "SELECT last_insert_rowid()"
+            rowid = int_select_query(comm)
+            
+            self.currentAttendanceId = rowid[0]
+            self.startCapture()
 
-        comm = "INSERT INTO attendance (userid,courseid,lectureno,percent_completed) VALUES (?,?,?,?)"
-        cur = query(comm,(current_user['userid'],self.currentCourseNo,self.currentLectureNo,0))
-        comm = "SELECT last_insert_rowid()"
-        rowid = int_select_query(comm)
-        self.currentAttendanceId = rowid[0]
-        #print  self.currentAttendanceId
-
-        self.startCapture()
+        else :
+            self.loginMessageLbl.setText('Error: Login first to start lecture!')
 
     def startCapture(self):
 
@@ -327,9 +405,11 @@ class LectureTab(QWidget):
             check = self.face_verify(current_user['personid'])
             if check == True:
                 self.detectionCount = self.detectionCount + 1
+                self.dcnt.setText(str(self.detectionCount))
                 print "detectionCount %d " % self.detectionCount  
                 self.percent_completed = (self.detectionCount * self.detectionInterval * 100) / (self.lectureDuration * 60000)
-
+                p = '%.2f ' % self.percent_completed
+                self.lp.setText(p + "%")
                 comm = "UPDATE attendance SET percent_completed= ? WHERE id = ?"
                 cur = query(comm,(self.percent_completed,self.currentAttendanceId))
                 print "attendence updated"
@@ -417,6 +497,11 @@ class RecordsTab(QWidget):
         self.initUI()
 
     def initUI(self):
+
+        font1 = QFont('Helvetica', small_text_size)
+        font2 = QFont('Helvetica', medium_text_size)
+        font3 = QFont('Helvetica', large_text_size)
+
         self.hbox=QHBoxLayout()
         self.vbox1= QVBoxLayout()
         self.vbox2= QVBoxLayout()
@@ -431,21 +516,11 @@ class RecordsTab(QWidget):
         self.splitter1 = QSplitter(Qt.Horizontal)
         self.splitter1.addWidget(self.left)
         self.splitter1.addWidget(self.right)
-        self.splitter1.setSizes([650,50])
+        self.splitter1.setSizes([600,100])
+        #self.splitter1.setStretchFactor(10, 1)
         self.vvbox = QVBoxLayout()
         self.vvbox.addWidget(self.splitter1)
         self.setLayout(self.vvbox)
-
-        self.courseLbl = QLabel('Select Course')
-        self.courses = select_query("SELECT name FROM courses",())
-        self.courseSelect = QComboBox()
-        
-        for i in self.courses:
-            self.courseSelect.addItem(i)
-
-        self.showRecordsButton = QPushButton('Show Records')
-        self.showRecordsButton.clicked.connect(self.fetch_attendance_records)
-
         self.recordsTable = QTableWidget()
 
         #self.recordsTable.setScaledContents(True)
@@ -453,28 +528,67 @@ class RecordsTab(QWidget):
         #self.recordsTable.resizeRowsToContents()
         
         self.tableHeaders = ['Lecture No','Title','Duration','Percent Attendance', 'Lecture Status','Lecture date']
-        self.recordsTable.setRowCount(15)
+        self.recordsTable.setRowCount(30)
         self.recordsTable.setColumnCount(len(self.tableHeaders))
         self.recordsTable.setHorizontalHeaderLabels(self.tableHeaders)
         self.header = self.recordsTable.horizontalHeader()
-        self.header.setResizeMode(QHeaderView.ResizeToContents)
-        self.header.setStretchLastSection(True)
+        #self.header.setResizeMode(QHeaderView.ResizeToContents)
+        self.header.setResizeMode(QHeaderView.Stretch)
+        #self.header.setSectionResizeMode(QHeaderView.Stretch)
+        #self.header.setStretchLastSection(True)
 
         #self.recordsTable.horizontalHeader().setStretchLastSection(True)
-        self.recordsTable.setContentsMargins(0,0,0,0)
+        self.recordsTable.setContentsMargins(5,5,5,5)
         self.vbox1.addWidget(self.recordsTable)
-        self.vbox1.setSpacing(2)
+        self.courseLbl = QLabel('Select Course')
+        self.courses = select_query("SELECT name FROM courses",())
+        self.courseSelect = QComboBox()
+        for i in self.courses:
+            self.courseSelect.addItem(i)
+        self.showRecordsButton = QPushButton('Show Records')
+        self.showRecordsButton.clicked.connect(self.fetch_attendance_records)
+        self.errorMessageLbl = QLabel('')
+        self.errorMessageLbl.setFont(font1)
+        self.errorMessageLbl.setAlignment(Qt.AlignCenter)
+        self.fbox1 = QFormLayout()
+        self.fbox1.addRow(self.courseLbl)
+        self.fbox1.addRow(self.courseSelect)
+        self.fbox1.addRow(self.errorMessageLbl)
+        self.fbox1.addRow(self.showRecordsButton)
+        self.fbox1.setContentsMargins(20,50,20,50)
+        self.fbox1.setSpacing(20)
+        
+        self.tlecLbl = QLabel('Total Lectures: ')
+        self.tlecLbl.setFont(font3)
+        self.tlec = QLabel('')
+        self.tlec.setFont(font2)
+        self.clecLbl = QLabel('Completed Lectures: ')
+        self.clecLbl.setFont(font3)
+        self.clec = QLabel('')
+        self.clec.setFont(font2)
+        self.percentLbl = QLabel('Percentage Attendance: ')
+        self.percentLbl.setFont(font3)
+        self.percent = QLabel('')
+        self.percent.setFont(font2)
 
-        self.vbox2.addWidget(self.courseLbl)
-        self.vbox2.addWidget(self.courseSelect)
-        self.vbox2.addWidget(self.showRecordsButton)
-        self.vbox2.addStretch(2)
+        self.fbox2 = QFormLayout()
+        self.fbox2.addRow(self.tlecLbl)
+        self.fbox2.addRow(self.tlec)
+        self.fbox2.addRow(self.clecLbl)
+        self.fbox2.addRow(self.clec)
+        self.fbox2.addRow(self.percentLbl)
+        self.fbox2.addRow(self.percent)
+        self.fbox2.setContentsMargins(10,10,10,10)
+
+
+        self.vbox2.addLayout(self.fbox1)
+        self.vbox2.addLayout(self.fbox2)
+        #self.vbox2.addStretch(2)
 
     def fetch_attendance_records(self):
-
+        global login_status
         self.currentCourseNo =  self.courseSelect.currentIndex()+1
-        self.userid = current_user['userid']
-        if self.userid !=0 and self.currentCourseNo!=0 :
+        if login_status == True and current_user['userid']!=0:
             self.recordsTable.clearContents()
 
             comm = "SELECT lectureno ,title, duration FROM lectures WHERE courseid = ? ORDER BY lectureno"
@@ -482,20 +596,24 @@ class RecordsTab(QWidget):
             lecturenos = []
             titles = []
             durations = []
-            print res
+            #print res
             self.recordsTable.setRowCount(len(res))
+            totalLectures = len(res)
+            self.tlec.setText(str(len(res)))
+            completed = 0
+            
             for row in res:
                 lecturenos.append(row[0])
                 titles.append(row[1])
                 durations.append(row[2])
 
-
+            completed = 0    
             for idx,lectureno in enumerate(lecturenos):
 
                 comm = "SELECT COUNT(*) FROM attendance WHERE userid =? AND courseid = ? AND lectureno = ?"
-                cnt = int_select_query(comm,(self.userid,self.currentCourseNo,lectureno))
+                cnt = int_select_query(comm,(current_user['userid'],self.currentCourseNo,lectureno))
                 cnt = cnt[0]
-                print "Lecture No. ",lectureno
+                #print "Lecture No. ",lectureno
                 if cnt==0:
                     #print "Attendance not found"
                     row_content = [lectureno, titles[idx],durations[idx],'0.0','Remaning','NULL']
@@ -505,27 +623,35 @@ class RecordsTab(QWidget):
 
                 else:
                     comm = "SELECT MAX(percent_completed), start_time FROM attendance WHERE userid =? AND courseid = ? AND lectureno = ?"
-                    res = multiple_select_query(comm,(self.userid,self.currentCourseNo,lectureno))[0]
+                    res = multiple_select_query(comm,(current_user['userid'],self.currentCourseNo,lectureno))[0]
                     
                     percent = res[0]
                     completion_day = res[1]
                     #print "Attendance found " ,lectureno, res
-                    print completion_day
-                    row_content = [lectureno, titles[idx],durations[idx],percent,'Remaning',completion_day[0:10]]
-                    if percent > 75:
-                        row_content[2] = "Completed"
+                    #print completion_day
+                    sp = '%.2f' % res[0]
+                    row_content = [lectureno, titles[idx],durations[idx],sp,'Remaning',completion_day[0:10]]
+                    if percent >= 60:
+                        completed = completed + 1
+                        row_content[4] = "Completed"
 
                     for pos , item in enumerate(row_content):
-                        #print pos,item
                         self.recordsTable.setItem(lectureno-1, pos , QTableWidgetItem(str(item)))
 
+            percent = (completed/totalLectures)*100
+            self.clec.setText(str(completed))
+            s =   '%.2f' % percent
+            self.percent.setText(s+' %')          
+
+        else:
+            self.errorMessageLbl.setText('Error: User not logged in!')                
     
 class MainWindow:
     def __init__(self): 
         self.qt = QTabWidget()
-        #geom = QDesktopWidget().availableGeometry()
-        #self.qt.setGeometry(geom)
-        self.qt.setGeometry(window_x, window_y, window_width, window_height)
+        geom = QDesktopWidget().availableGeometry()
+        self.qt.setGeometry(geom)
+        #self.qt.setGeometry(window_x, window_y, window_width, window_height)
         self.pal=QPalette()
         self.pal.setColor(QPalette.Background,Qt.white)
         self.pal.setColor(QPalette.Foreground,Qt.black)
@@ -538,8 +664,17 @@ class MainWindow:
         self.tab2 = QWidget()
         self.RecordsTab=RecordsTab(self.tab2)
         self.qt.addTab(self.RecordsTab,"Attendance Records")
-        self.qt.show()
+        self.qt.setStyleSheet("""
+        #box-border {
+            border-style : solid;
+            border-color : #BFC9CA;
+            border-width : 2px;
+            border-radius: 5px;
 
+            
+            }
+        """)
+        self.qt.show()
 
 
 if __name__ == '__main__':
