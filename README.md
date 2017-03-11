@@ -39,8 +39,9 @@ All users can view there attendance records by selecting the cource in records t
     ├── MSFaceAPI.py                          # Mudule for interacting with MS FACE APIs
     ├── imageUpload.py                        # Module for uploading images to cloudinary
     ├── haarcascade_frontalface_default.xml   # Cascade Classifier for face recognition
-    ├── cnf.ini                               # configuration file to store API keys
+    ├── cnf.ini                               # Configuration file to store API keys
     ├── solams.db                             # Sqlite3 database to store records
+    ├── youtube-playlist.py                   # python script to store youtube video info in database
     └── README.md
 ```
 ## Database used
