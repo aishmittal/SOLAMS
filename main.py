@@ -278,7 +278,7 @@ class LectureTab(QWidget):
         self.vbox2.addWidget(self.bottomRight)
 
         self.video = Browser()
-        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI?autoplay=1&allowfullscreen'
+        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI?autoplay=1'
         self.currentLectureNo = 1
         #self.video = QWebView()
         #self.factory = WebPluginFactory()
@@ -424,7 +424,7 @@ class LectureTab(QWidget):
         self.dcnt.setText(str(self.detectionCount))
         self.lp.setText("0.00 %")
         self.tdcnt.setText("0")
-        self.video.load(QtCore.QUrl(self.lectureUrl))
+        self.video.load(QtCore.QUrl('https://www.youtube.com/embed/HJUI2Il3xnI'))
 
     def mark_attendance(self):
         print "mark_attendance started"
