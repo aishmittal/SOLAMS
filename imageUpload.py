@@ -10,7 +10,6 @@ config = configparser.ConfigParser()
 config.read('cfg.ini')
 
 
-CLOUDINARY_URL='cloudinary://648234412851627:iymOumw1AhoRajqW6FPwZkJCMbo@aish'
 def cloudinary_config():
 	cloudinary.config(
 	  cloud_name = config['CLOUDINARY']['cloud_name'].encode('utf8'),  
