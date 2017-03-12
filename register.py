@@ -46,7 +46,7 @@ cloudinary_dataset = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SO
 cloudinary_tmp = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/tmp'
 
 
-camera_port = 0
+camera_port = 1
 user={
     'uname':'',
     'fname':'',

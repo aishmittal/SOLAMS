@@ -48,7 +48,7 @@ dataset_path = os.path.join(base_path,'dataset')
 tmp_path = os.path.join(base_path,'tmp')
 cloudinary_dataset = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/dataset'
 cloudinary_tmp = 'http://res.cloudinary.com/aish/image/upload/v1488457817/SOLAMS/tmp'
-camera_port = 0
+camera_port = 1
 cascPath = 'haarcascade_frontalface_default.xml'
 faceCascade = cv2.CascadeClassifier(cascPath) 
     
@@ -170,7 +170,7 @@ class LectureTab(QWidget):
         self.splitter1 = QSplitter(Qt.Horizontal)
         self.splitter1.addWidget(self.left)
         self.splitter1.addWidget(self.right)
-        self.splitter1.setStretchFactor(20, 1)
+        self.splitter1.setStretchFactor(10, 1)
 
         self.vvbox = QVBoxLayout()
         self.vvbox.setAlignment(Qt.AlignCenter)
@@ -187,7 +187,7 @@ class LectureTab(QWidget):
 
         self.fbox1=QFormLayout()
         self.fbox1.setAlignment(Qt.AlignCenter)
-        self.fbox1.setSpacing(20)
+        self.fbox1.setSpacing(15)
         self.unameLbl = QLabel('User Name')
         self.unameEdt = QLineEdit()
         self.loginMessageLbl = QLabel('')
@@ -205,7 +205,7 @@ class LectureTab(QWidget):
             self.courseSelect.addItem(i)
 
         self.fbox2=QFormLayout()
-        self.fbox2.setSpacing(20)
+        self.fbox2.setSpacing(15)
         self.lectureLbl = QLabel('Lecture No.')
         self.lectureSelect = QComboBox()
         self.lectures = []
@@ -218,6 +218,10 @@ class LectureTab(QWidget):
 
         self.startButton = QPushButton('Start Lecture')
         self.startButton.clicked.connect(self.start_new_lecture)
+        self.stopButton = QPushButton('Leave Lecture')
+        self.stopButton.clicked.connect(self.stopLecture)
+        self.quitButton = QPushButton('Quit')
+        self.quitButton.clicked.connect(self.quitApp)
         
 
         self.fbox1.addRow(self.unameLbl)
@@ -232,6 +236,8 @@ class LectureTab(QWidget):
         self.fbox2.addRow(self.lectureLbl)
         self.fbox2.addRow(self.lectureSelect)
         self.fbox2.addRow(self.startButton)
+        self.fbox2.addRow(self.stopButton)
+        self.fbox2.addRow(self.quitButton)
         self.fbox2.setContentsMargins(10,10,10,10)
         
         self.fbox3 = QFormLayout()
@@ -247,12 +253,15 @@ class LectureTab(QWidget):
         self.tdcnt.setFont(font2)
         self.lpLbl.setFont(font2)
         self.lp.setFont(font2)
+
         
 
 
         self.fbox3.addRow(self.dcntLbl,self.dcnt)
         self.fbox3.addRow(self.tdcntLbl,self.tdcnt)
         self.fbox3.addRow(self.lpLbl,self.lp)
+        
+
         self.fbox3.setContentsMargins(5,40,5,20)
 
         self.topRight = QFrame()
@@ -269,7 +278,7 @@ class LectureTab(QWidget):
         self.vbox2.addWidget(self.bottomRight)
 
         self.video = Browser()
-        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI?autoplay=1'
+        self.lectureUrl =  'https://www.youtube.com/embed/HJUI2Il3xnI?autoplay=1&allowfullscreen'
         self.currentLectureNo = 1
         #self.video = QWebView()
         #self.factory = WebPluginFactory()
@@ -278,11 +287,20 @@ class LectureTab(QWidget):
         # src='https://www.youtube.com/embed/XGSy3_Czz8k'>\
         # </iframe>")
         self.video.load(QtCore.QUrl(self.lectureUrl))
-        #sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        #sizePolicy.setHeightForWidth(True)
-        #self.video.setSizePolicy(sizePolicy)
-        self.vbox1.setContentsMargins(5,100,5,100)
-        self.vbox1.addWidget(self.video,Qt.AlignCenter,Qt.AlignCenter)
+        self.vbox1.setContentsMargins(10,50,10,50)
+        self.vbox1.addWidget(self.video)
+
+    def quitApp(self):
+        quit_msg = "Are you sure you want to exit the program?"
+        reply = QMessageBox.question(self, 'Message', 
+                         quit_msg, QMessageBox.Yes, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            QtCore.QCoreApplication.instance().quit()
+        else:
+            # Nothing
+            a=1
+
 
 
     def heightForWidth(self, width):
@@ -364,7 +382,7 @@ class LectureTab(QWidget):
             self.lectureUrl = res[0]
             self.lectureDuration = res[1]
             self.maxDetectionCount = (self.lectureDuration * 60000) / self.detectionInterval
-            self.tdcnt.setText(str(self.maxDetectionCount))
+            self.tdcnt.setText(str(int(self.maxDetectionCount)))
             self.dcnt.setText('0')
             self.lp.setText('0.00')
             #print "maxDetectionCount %d " % self.maxDetectionCount
@@ -398,6 +416,15 @@ class LectureTab(QWidget):
             cv2.destroyAllWindows()
         except Exception as e:
             print e
+
+    def stopLecture(self):
+        self.stopCapture()
+        self.detectionCount = 0
+        self.maxDetectionCount = 0
+        self.dcnt.setText(str(self.detectionCount))
+        self.lp.setText("0.00 %")
+        self.tdcnt.setText("0")
+        self.video.load(QtCore.QUrl(self.lectureUrl))
 
     def mark_attendance(self):
         print "mark_attendance started"
@@ -674,9 +701,29 @@ class MainWindow:
             
             }
         """)
+        
+        self.qt.setMouseTracking(True)
+        #self.qt.showFullScreen()
         self.qt.show()
+        
+    def setMouseTracking(self, flag):
+        def recursive_set(parent):
+            for child in parent.findChildren(QtCore.QObject):
+                try:
+                    child.setMouseTracking(flag)
+                except:
+                    pass
+                recursive_set(child)
+        QtGui.QWidget.setMouseTracking(self, flag)
+        recursive_set(self)
+
+    def mouseMoveEvent(self, event):
+        print 'mouseMoveEvent: x=%d, y=%d' % (event.x(), event.y())    
 
 
 if __name__ == '__main__':
     a = QApplication(sys.argv)
-    w = MainWindow(),sys.exit(a.exec_())
+    w = MainWindow()
+   
+
+    sys.exit(a.exec_())
