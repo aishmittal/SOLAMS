@@ -50,45 +50,45 @@ All users can view their attendance records by selecting the course in records t
  
 ## Database Structure
 * sudents
- * id -> userid
- * uname -> user name
- * fname -> first name
- * lname -> last name
- * dob -> date of birth
- * email -> user email id
- * gender -> gender
- * personid -> id of user in MS Face APIs
- * created at -> time stamp of user entry creation
+  * id -> userid
+  * uname -> user name
+  * fname -> first name
+  * lname -> last name
+  * dob -> date of birth
+  * email -> user email id
+  * gender -> gender
+  * personid -> id of user in MS Face APIs
+  * created at -> time stamp of user entry creation
   
 * courses
- * id -> courseid
- * name -> course name
- * code -> university code of course
- * shortname -> shortname of the course
- * instructor -> instructor name
- * totallectures -> total no of lectures
- * url -> url of course playlist on youtube
- * description -> description of course
- * created -> timestamp
+  * id -> courseid
+  * name -> course name
+  * code -> university code of course
+  * shortname -> shortname of the course
+  * instructor -> instructor name
+  * totallectures -> total no of lectures
+  * url -> url of course playlist on youtube
+  * description -> description of course
+  * created -> timestamp
  
 * lectures
- * id -> rowid
- * courseid -> froreign key from courses
- * lectureno -> lecture no
- * duration -> total duration of lecture in minutes
- * title -> lecture title
- * tilelbl -> lecture title label
- * videoid -> id of lecture video on youtube
- * description -> embed youtube url of lecture video
- * created -> timestamp
+  * id -> rowid
+  * courseid -> froreign key from courses
+  * lectureno -> lecture no
+  * duration -> total duration of lecture in minutes
+  * title -> lecture title
+  * tilelbl -> lecture title label
+  * videoid -> id of lecture video on youtube
+  * description -> embed youtube url of lecture video
+  * created -> timestamp
  
 * attendance
- * id -> rowid
- * userid -> froreign key from students
- * courseid -> froreign key from courses
- * lectureno -> lecture no
- * percent_completed -> aggregate percent of lecture completion
- * start_time -> timestamp
+  * id -> rowid
+  * userid -> froreign key from students
+  * courseid -> froreign key from courses
+  * lectureno -> lecture no
+  * percent_completed -> aggregate percent of lecture completion
+  * start_time -> timestamp
  
  ## Thanks
 Feel free to post issues if you find any problem or contact me [Aishwarya Mittal](https://www.facebook.com/aishwrymittal)<br>
