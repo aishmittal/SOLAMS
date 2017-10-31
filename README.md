@@ -91,5 +91,5 @@ All users can view their attendance records by selecting the course in records t
   * start_time -> timestamp
  
  ## Thanks
-Feel free to post issues if you find any problem or contact me [Aishwarya Mittal](https://www.facebook.com/aishwrymittal)<br>
+Feel free to post issues if you find any problem or contact me [Aishwarya Mittal](https://www.facebook.com/aishhmittal)<br>
 ©[MIT License](https://github.com/aishmittal/SOLAMS/blob/master/LICENSE)
