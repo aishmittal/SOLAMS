@@ -1,7 +1,6 @@
 # SOLAMS (Smart Online Lecture Attendance Management System)
 
 ![platform](https://img.shields.io/badge/python-2.7-blue.svg)
-![platform](https://img.shields.io/badge/dependencies-up--to--date-brightgreen.svg)
 ![platform](https://img.shields.io/badge/license-MIT%20License-blue.svg)
 
 SOLAMS is an Face Identification based automatic attendance management system which is useful for universities and educational websites which offers online lecture to students but wants to keep track of their attendance to ensure that students are taking lectures. It consists of two applications i.e. register user and main application. 
